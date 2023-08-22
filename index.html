@@ -23,10 +23,10 @@
       const y = (clientY - canvasRect.top) / canvasRect.height;
 
       // Convert 2D coordinates to 3D coordinates
-      const { detail } = modelViewer.positionAndNormalFromPoint(x, y);
+      const result = modelViewer.positionAndNormalFromPoint(x, y);
 
-      if (detail) {
-        const { position, normal } = detail;
+      if (result && result.detail) {
+        const { position, normal } = result.detail;
 
         // Create hotspot element
         const hotspot = document.createElement('div');
