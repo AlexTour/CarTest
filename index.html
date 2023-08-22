@@ -1,51 +1,68 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <title>&lt;model-viewer&gt; template</title>
+    <meta charset="utf-8">
+    <meta name="description" content="&lt;model-viewer&gt; template">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link type="text/css" href="./styles.css" rel="stylesheet"/>
     <script type="module">
     const modelViewer = document.querySelector('model-viewer');
     const hotspotsContainer = document.querySelector('.hotspots-container');
     const hotspots = [];
 
     modelViewer.addEventListener('click', event => {
-      const { offsetX, offsetY } = event;
+      const { clientX, clientY } = event;
 
-      // Calculate 3D coordinates based on click position
-      const point = modelViewer.pointFromPixel(offsetX, offsetY);
+      // Get the canvas where the model is rendered
+      const canvas = modelViewer.shadowRoot.querySelector('canvas');
 
-      // Create hotspot element
-      const hotspot = document.createElement('div');
-      hotspot.classList.add('hotspot');
-      hotspot.style.left = `${offsetX}px`;
-      hotspot.style.top = `${offsetY}px`;
+      // Calculate the mouse position relative to the canvas
+      const canvasRect = canvas.getBoundingClientRect();
+      const x = (clientX - canvasRect.left) / canvasRect.width;
+      const y = (clientY - canvasRect.top) / canvasRect.height;
 
-      // Add a marker or icon for the hotspot
-      hotspot.innerHTML = 'H'; // You can replace this with your preferred marker or icon
+      // Convert 2D coordinates to 3D coordinates
+      const { detail } = modelViewer.positionAndNormalFromPoint(x, y);
 
-      // Store the hotspot data
-      const hotspotData = {
-        position: point,
-        marker: 'H', // You can store the marker/icon information here
-      };
-      hotspots.push(hotspotData);
+      if (detail) {
+        const { position, normal } = detail;
 
-      hotspot.addEventListener('click', () => {
-        // Handle click on the hotspot (e.g., show details or perform an action)
-        alert('Hotspot clicked!');
-      });
+        // Create hotspot element
+        const hotspot = document.createElement('div');
+        hotspot.classList.add('hotspot');
+        hotspot.style.left = `${clientX}px`;
+        hotspot.style.top = `${clientY}px`;
 
-      hotspot.addEventListener('contextmenu', (e) => {
-        // Prevent the default context menu (right-click menu)
-        e.preventDefault();
-        
-        // Handle right-click on the hotspot (e.g., delete the hotspot)
-        const index = hotspots.indexOf(hotspotData);
-        if (index !== -1) {
-          hotspotsContainer.removeChild(hotspot);
-          hotspots.splice(index, 1);
-        }
-      });
+        // Add a marker or icon for the hotspot
+        hotspot.innerHTML = 'H'; // You can replace this with your preferred marker or icon
 
-      hotspotsContainer.appendChild(hotspot);
+        // Store the hotspot data
+        const hotspotData = {
+          position: position,
+          marker: 'H', // You can store the marker/icon information here
+        };
+        hotspots.push(hotspotData);
+
+        hotspot.addEventListener('click', () => {
+          // Handle click on the hotspot (e.g., show details or perform an action)
+          alert('Hotspot clicked!');
+        });
+
+        hotspot.addEventListener('contextmenu', (e) => {
+          // Prevent the default context menu (right-click menu)
+          e.preventDefault();
+          
+          // Handle right-click on the hotspot (e.g., delete the hotspot)
+          const index = hotspots.indexOf(hotspotData);
+          if (index !== -1) {
+            hotspotsContainer.removeChild(hotspot);
+            hotspots.splice(index, 1);
+          }
+        });
+
+        hotspotsContainer.appendChild(hotspot);
+      }
     });
 
     // Function to save hotspots
@@ -68,8 +85,6 @@
 
           const hotspot = document.createElement('div');
           hotspot.classList.add('hotspot');
-          hotspot.style.left = `${position.x * 100}%`;
-          hotspot.style.top = `${position.y * 100}%`;
           hotspot.innerHTML = marker;
           hotspotsContainer.appendChild(hotspot);
 
