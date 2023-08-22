@@ -1,134 +1,122 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <title>&lt;model-viewer&gt; template</title>
-    <meta charset="utf-8">
-    <meta name="description" content="&lt;model-viewer&gt; template">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link type="text/css" href="./styles.css" rel="stylesheet"/>
-    <style>
-    .annotations-container {
-      position: relative;
-    }
-
-    .annotation {
-      position: absolute;
-      background-color: rgba(255, 255, 255, 0.7);
-      border: 1px solid #ccc;
-      padding: 5px;
-      border-radius: 5px;
-      pointer-events: auto;
-      user-select: none;
-    }
-
-    .delete-button {
-      cursor: pointer;
-      color: red;
-      font-weight: bold;
-      margin-left: 5px;
-    }
-  </style>
-  <script type="module">
+    <script type="module">
     const modelViewer = document.querySelector('model-viewer');
-    const annotationsContainer = document.querySelector('.annotations-container');
-    const annotations = [];
+    const hotspotsContainer = document.querySelector('.hotspots-container');
+    const hotspots = [];
 
     modelViewer.addEventListener('click', event => {
       const { offsetX, offsetY } = event;
 
-      // Calculate 3D coordinates from 2D click position
-      const { x, y, z } = modelViewer.positionOnEvent(offsetX, offsetY);
+      // Calculate 3D coordinates based on click position
+      const point = modelViewer.pointFromPixel(offsetX, offsetY);
 
-      // Create annotation element
-      const annotation = document.createElement('div');
-      annotation.classList.add('annotation');
-      annotation.style.left = `${offsetX}px`;
-      annotation.style.top = `${offsetY}px`;
+      // Create hotspot element
+      const hotspot = document.createElement('div');
+      hotspot.classList.add('hotspot');
+      hotspot.style.left = `${offsetX}px`;
+      hotspot.style.top = `${offsetY}px`;
 
-      // Add annotation text input
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.placeholder = 'Add annotation';
-      input.addEventListener('keyup', e => {
-        if (e.key === 'Enter') {
-          const text = input.value;
-          annotation.innerHTML = text;
+      // Add a marker or icon for the hotspot
+      hotspot.innerHTML = 'H'; // You can replace this with your preferred marker or icon
 
-          // Store the annotation data
-          annotations.push({ x, y, z, text });
+      // Store the hotspot data
+      const hotspotData = {
+        position: point,
+        marker: 'H', // You can store the marker/icon information here
+      };
+      hotspots.push(hotspotData);
 
-          // Add a delete button to the annotation
-          const deleteButton = document.createElement('span');
-          deleteButton.classList.add('delete-button');
-          deleteButton.innerHTML = 'X';
-          deleteButton.addEventListener('click', () => {
-            // Remove the annotation from the DOM and the data structure
-            annotationsContainer.removeChild(annotation);
-            const index = annotations.indexOf(annotationData);
-            if (index !== -1) {
-              annotations.splice(index, 1);
-            }
-          });
+      hotspot.addEventListener('click', () => {
+        // Handle click on the hotspot (e.g., show details or perform an action)
+        alert('Hotspot clicked!');
+      });
 
-          annotation.appendChild(deleteButton);
-          input.style.display = 'none'; // Hide the input field
+      hotspot.addEventListener('contextmenu', (e) => {
+        // Prevent the default context menu (right-click menu)
+        e.preventDefault();
+        
+        // Handle right-click on the hotspot (e.g., delete the hotspot)
+        const index = hotspots.indexOf(hotspotData);
+        if (index !== -1) {
+          hotspotsContainer.removeChild(hotspot);
+          hotspots.splice(index, 1);
         }
       });
 
-      annotation.appendChild(input);
-      annotationsContainer.appendChild(annotation);
-
-      // Place annotation in 3D space
-      const annotationPosition = document.createElement('a-entity');
-      annotationPosition.setAttribute('position', { x, y, z });
-      modelViewer.appendChild(annotationPosition);
-
-      // Keep annotation position updated with the model
-      modelViewer.addEventListener('camera-change', () => {
-        const cameraPosition = modelViewer.cameraOrbit;
-        annotationPosition.object3D.position.set(cameraPosition.x + x, cameraPosition.y + y, cameraPosition.z + z);
-      });
+      hotspotsContainer.appendChild(hotspot);
     });
 
-    // Function to save annotations
-    function saveAnnotations() {
-      // Serialize the annotations data and save it to a storage (e.g., localStorage)
-      localStorage.setItem('annotations', JSON.stringify(annotations));
-      console.log('Annotations saved.');
+    // Function to save hotspots
+    function saveHotspots() {
+      // Serialize the hotspots data and save it to storage (e.g., localStorage)
+      localStorage.setItem('hotspots', JSON.stringify(hotspots));
+      console.log('Hotspots saved.');
     }
 
-    // Function to load annotations
-    function loadAnnotations() {
-      // Load the annotations data from storage (e.g., localStorage)
-      const savedAnnotations = localStorage.getItem('annotations');
-      if (savedAnnotations) {
-        annotations.push(...JSON.parse(savedAnnotations));
+    // Function to load hotspots
+    function loadHotspots() {
+      // Load the hotspots data from storage (e.g., localStorage)
+      const savedHotspots = localStorage.getItem('hotspots');
+      if (savedHotspots) {
+        hotspots.push(...JSON.parse(savedHotspots));
 
-        // Display saved annotations
-        annotations.forEach(annotationData => {
-          const { x, y, z, text } = annotationData;
+        // Display saved hotspots
+        hotspots.forEach(hotspotData => {
+          const { position, marker } = hotspotData;
 
-          const annotation = document.createElement('div');
-          annotation.classList.add('annotation');
+          const hotspot = document.createElement('div');
+          hotspot.classList.add('hotspot');
+          hotspot.style.left = `${position.x * 100}%`;
+          hotspot.style.top = `${position.y * 100}%`;
+          hotspot.innerHTML = marker;
+          hotspotsContainer.appendChild(hotspot);
 
-          const annotationPosition = document.createElement('a-entity');
-          annotationPosition.setAttribute('position', { x, y, z });
-
-          annotation.innerHTML = text;
-          annotation.appendChild(annotationPosition);
-          annotationsContainer.appendChild(annotation);
+          hotspot.addEventListener('click', () => {
+            alert('Hotspot clicked!');
+          });
         });
 
-        console.log('Annotations loaded.');
+        console.log('Hotspots loaded.');
       }
     }
 
-    // Load annotations when the page loads
-    loadAnnotations();
+    // Load hotspots when the page loads
+    loadHotspots();
 
-    // Save annotations when the user requests it (e.g., button click)
-    document.querySelector('#saveAnnotationsButton').addEventListener('click', saveAnnotations);
+    // Save hotspots when the user requests it (e.g., button click)
+    document.querySelector('#saveHotspotsButton').addEventListener('click', saveHotspots);
   </script>
+  <style>
+    .hotspots-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .hotspot {
+      position: absolute;
+      font-size: 20px;
+      color: red;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    #saveHotspotsButton {
+      margin-top: 10px;
+      padding: 5px 10px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #saveHotspotsButton:hover {
+      background-color: #0056b3;
+    }
+  </style>
   </head>
   <body>
     <!-- <model-viewer> HTML element -->
@@ -143,8 +131,8 @@
           <img src="ar_hand_prompt.png">
       </div>
     </model-viewer>  
-    <div class="annotations-container"></div>
-    <button id="saveAnnotationsButton">Save Annotations</button>
+    <div class="hotspots-container"></div>
+    <button id="saveHotspotsButton">Save Hotspots</button>
     <script src="script.js"></script>
     <!-- Loads <model-viewer> for browsers: -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.2.0/model-viewer.min.js"></script>
