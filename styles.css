@@ -141,6 +141,7 @@ model-viewer > #ar-prompt > img {
 #displayblocks{
   display: flex;
   justify-content: center;
+  height: 90%;
 }
 
 #modelblock{
